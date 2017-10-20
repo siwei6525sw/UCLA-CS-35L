@@ -1,0 +1,276 @@
+Christopher Aziz
+304806012
+Lab 1
+
+Linux and Emacs Scavenger Hunt
+------------------------------
+
+(1)
+
+man man
+
+Seeing that -k was defined as the same as apropos, I opened its manual. 
+
+man apropos
+
+I then tested the command. 
+
+man -k the
+
+By typing 'man -k <keyword>' we print all the commands that have
+the word <keyword> in the description of their man page.
+
+(2)
+
+I used the which command to find the location of each executable.
+
+which cp
+which wc
+
+The cp program is located in /bin/cp.
+The wc program is located in /bin/wc.
+
+(3)
+
+I used the find manual to determine how to search for a one letter executable
+and used whatis to determine its function.
+
+man find
+find / -executable -name '?'
+
+After finding too many in the root, I searched each of the directories
+in the $PATH.
+
+echo $PATH
+find /usr/local/cs/bin/ /usr/lib64/qt-3.3/bin /u/cs/ugrad/aziz/perl5/bin
+/usr/lib64/ccache /usr/local/bin /usr/bin /usr/X11R6/bin
+/u/cs/ugrad/aziz/bin -executable -name '?'
+
+I then determined each executable's function.
+
+whatis X
+X
+whatis w
+whatis [
+man [
+
+I found that there are the following one character long executables:
+
+X: starts an X server
+w: shows who is logged on and what they are doing
+[: builtin bash command that tests a condition and returns a boolean status
+
+(4)
+
+I navigated to the bin and used the long list to find where emacs is linked to.
+
+cd /usr/bin
+ls -l emacs
+
+The file actually exectuted is located in /etc/alternatives/emacs.
+
+(5)
+
+I used the chmod manual to determine what each tag meant. I then tested each
+ using a txt file.
+
+man chmod
+touch test.txt
+ls -l
+chmod g+s test.txt
+ls -l
+chmod o+x test.txt
+ls -l
+chmod o-x test.txt
+ls -l
+
+I found that g+s sets the group permission for anyone to execute with
+the group's ID and permissions, and o-x removes others'
+(people who are not user or in group) ability to execute the file.
+
+(6)
+
+man find
+find <directory> -ctime -21 -type f
+
+Using the command 'find . -ctime -21 -type f' we can list all files that
+have been modified in the last 3 weeks (21 days).
+
+(7)
+
+Running 'find / -ctime -21 -type d' on the linux server, I generated far
+too many directories to list here that were edited in the last 3 weeks.
+However, I listed some:
+
+/usr/local/cs/src/emacs
+/usr/local/cs/src/emacs/RCS
+/usr/local/cs/src/gcc
+/usr/local/cs/src/gcc/RCS
+/usr/local/cs/src/gdb
+/usr/local/cs/src/gdb/RCS
+/usr/local/cs/src/gettext/RCS
+/usr/local/cs/src/gprolog/RCS
+/usr/local/cs/src/grep
+/usr/local/cs/src/grep/RCS
+/usr/local/cs/src/gzip/RCS
+/usr/local/cs/src/help2man/RCS
+/usr/local/cs/src/jdk
+/usr/local/cs/src/jdk/RCS
+/usr/local/cs/src/m4
+/usr/local/cs/src/m4/RCS
+/usr/local/cs/src/make/RCS
+/usr/local/cs/src/mpc/RCS
+/usr/local/cs/src/ocaml
+/usr/local/cs/src/ocaml/RCS
+/usr/local/cs/src/python/RCS
+/usr/local/cs/src/racket/RCS
+/usr/local/cs/src/tar/RCS
+/usr/local/cs/src/twisted/RCS
+/usr/local/cs/include/c++
+/usr/local/cs/lib64
+/usr/local/cs/share
+/usr/local/cs/share/info
+/usr/local/cs/share/man/man1
+/usr/local/cs/share/man/man7
+/usr/local/cs/share/man/man5
+/usr/local/cs/share/man/man3
+/usr/local/cs/bin
+/usr/local/cs/.del
+
+(8)
+
+I first navigated to the directory that contained find.
+
+which find
+cd /usr/bin/
+
+Then I determined how to symbolic links, and count them using wc.
+
+man find
+man wc
+find . -type l | wc -l
+
+On lnxsrv09, I found 293 symbolic links.
+
+(9)
+
+I dermined how to order files by time.
+
+man ls
+ls -lt
+
+The oldest file on the linux server was detect_ppa from 2000-09-08.
+
+(10)
+
+man locale
+
+The locale man page informed me that the command gets its data from
+predefined environment variables.
+
+(11)
+
+After running emacs, I was informed how to reach the help screen,
+from which I was informed how to show commands whose name matches
+a pattern.
+
+emacs
+C-h
+C-h a sort
+
+I then recalled how to switch buffers from previous classes.
+
+C-x o
+
+I scrolled to find the commands with sort are:
+
+Buffer-menu-sort
+sort-columns
+sort-fields
+sort-lines
+sort-numeric-fields
+sort-pages
+sort-paragraphs
+sort-regexp-fields
+tabulated-list-col-sort
+tabulated-list-sort
+
+(12)
+
+First I showed the commands available by following the on-screen
+guidlines.
+
+C-h
+?
+b
+
+Then I switched to the buffer and searched for commands of C-M-a
+through C-M-h.
+
+C-x o
+C-s 'C-M'
+
+This revealed the following:
+
+C-M-a           beginning-of-defun
+C-M-b           backward-sexp
+C-M-c           exit-recursive-edit
+C-M-d           down-list
+C-M-e           end-of-defun
+C-M-f           forward-sexp
+C-M-h           mark-defun
+
+By pressing enter on each one I could see more detailed descriptions:
+
+C-M-a	Move back to the beginning of a defun
+C-M-b	Move backwards across one balanced expression
+C-M-c	Exit the innermost recursive edit or minibuffer
+C-M-d	Move forward down one level of parentheses
+C-M-e	Move forward to the next end of defun
+C-M-f	Move forward across one balanced expression
+C-M-h	Put a mark at the end of this defun and point at beginning.
+
+(13)
+
+Using the same method as in question 12, I found that keyboard-quit
+is bound to C-g.
+This is described as:
+
+Signal a ‘quit’ condition.
+During execution of Lisp code, this character causes a quit directly.
+At top-level, as an editor command, this simply beeps.
+
+This, simply, means that the keystroke quits whatever you are doing.
+
+(14)
+
+After going back, I searched for yank and through a simlar method to
+find its description
+
+C-s yank
+
+I found the following description:
+
+Reinsert ("paste") the last stretch of killed text.
+More precisely, reinsert the most recent kill, which is the
+stretch of killed text most recently killed OR yanked.  Put point
+at the end, and set mark at the beginning without activating it.
+With just C-u as argument, put point at beginning, and mark at end.
+With argument N, reinsert the Nth most recent kill.
+
+This means that C-s pastes whatever is on the clipboard.
+Simply put, text is copied to the clipboard when it is killed,
+such as through C-k, which kills a line of text.
+
+(15)
+
+Referring to the same help menu through C-h ? b, I was able to search
+for dired.
+
+C-s dired
+
+I found that the dired command can delte, rename, and print files,
+in addition to use all of the 'ls' options.
+The dired command even allows flagging files for deletion and
+manipulating the directory listings in a window.
+These are features unavailable with the 'ls' command.
