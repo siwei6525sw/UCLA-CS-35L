@@ -1,0 +1,129 @@
+Christopher Aziz
+304806012
+Lab 2
+
+Laboratory: Spell-checking Hawaiian
+-----------------------------------
+
+export LC_ALL='C'
+locale
+
+The shell command correctly outputs LC_CTYPE="C".
+I now sort and copy the words.
+
+sort /usr/share/dict/words > words
+
+I then create a text file containing the HTML on the assignment's webpage and
+run the commands with the text file as input. 
+
+wget http://web.cs.ucla.edu/classes/fall17/cs35L/assign/assign2.html
+
+tr -c 'A-Za-z' '[\n*]'
+This command translates all non-letters into new lines.
+
+tr -cs 'A-Za-z' '[\n*]'
+The addition of the -s option squeezes multiple occurances of characters into
+a single instance. This way multiple new lines in the output become just one
+new line. Once again, all non-letters are translated into new lines, but never
+twice in a row. This effectively creates a new line for each word from the input
+file.
+
+tr -cs 'A-Za-z' '[\n*]' | sort
+After putting each word on a new line as described by the last command, the
+addition of the sort command causes each line to be sorted. Now each word from
+the input file
+
+tr -cs 'A-Za-z' '[\n*]' | sort -u
+Now, in addition to passing the words to the sort command, the -u option causes
+sort to output only one of each line even if there are duplicates. Ultimately,
+the input file is parsed for unique words and sorted.
+
+tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words
+This command passes the unique sorted words from above into the comm command
+which compares it with the words file. This command outputs three columns:
+the first contains the unique words from the html file, the second contains
+words in the words file but not in the html file, and the third column contains
+words that are included in both files.
+
+tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words
+The addition of the -23 option omits the second and third column. This causes the
+output to only contain the words from the first file. This means that only the
+unqiue words from the html file that are not in the words file will be included
+in the output.
+
+I ran the following command to get the "English to Hawaiian" html page.
+
+wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+I used emacs to create and edit an executable shell script file called
+buildwords:
+
+emacs buildwords
+
+I switched between editing the shell script and executing it as described
+in the assignment to test its functionality. I ended up with the following:
+
+#! /bin/sh                                                                      
+# removes all but words within <td> tags                                        
+sed -n '/<td>/,/<\/td>/p' $1 |
+
+# remove all new lines                                                          
+tr -d '\n' |
+
+# replace </td> with new lines                                                  
+sed -r 's/<\/td>/\n/g' |
+
+# remove every other (English) words                                            
+sed -n '2~2p' |
+
+# remove all  tags                                                              
+sed -r 's/<[^>]*>//g' |
+
+# replace commas and spaces with new lines                                      
+sed -r 's/[, ]/\n/g' |
+
+# remove empty lines                                                            
+sed -r '/^\s*$/d' |
+
+# make uppercase letters lowercase                                              
+tr '[:upper:]' '[:lower:]' |
+
+# replace ` with '                                                              
+sed s/\`/\'/g |
+
+# remove words that use English letters                                         
+sed  "/[^p^k^'^m^n^w^l^h^a^e^i^o^u]/d" |
+
+# sort and remove duplicates                                                    
+sort -u
+
+To run buildwords I used:
+
+chmod u+x buildwords
+cat hwnwdseng.htm | ./buildwords | less
+
+To create the hwords file I used:
+
+./buildword < hwnwdseng.htm > hwords
+
+To check the html file against my dictionaries, I used the following commands:
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | tr '[:upper:]' '[:lower:]' |
+sort -u | comm -23 - hwords | wc
+This command results in 406 misspelled Hawaiian words.
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | tr '[:upper:]' '[:lower:]' |
+sort -u | comm -23 - words | wc
+This command results in 39 misspelled English words.
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | tr '[:upper:]' '[:lower:]' |
+sort -u | comm -23 - hwords | comm -12 - words | wc
+This command results in 370 words that are corrent in English but wrong
+in Hawaiian.
+Examples: want, worry, and your
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | tr '[:upper:]' '[:lower:]' |
+sort -u | comm -23 - words | comm -12 - hwords | wc
+This command results in 3 words that are corrent in Hawaiian but wrong
+in English.
+Examples: halau, lau, and wiki

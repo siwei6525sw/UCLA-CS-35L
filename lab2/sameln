@@ -1,0 +1,81 @@
+#! /bin/bash
+
+# This script takes a directory D, finds all regular files
+# immediately under D that are duplicates, and replaces the
+# duplicates with hard links.
+# The script keeps the file whose name is lexicographically first.
+# The script ignores non-regular files and reports unreadable files.
+
+# dir represents input directory to have duplicates removed
+dir=$1
+
+# dot_files holds all files in dir that begin with '.'
+dot_files=`ls -a1 $dir | grep '^\.' | sort`
+
+# reg_files holds all other files in dir
+reg_files=`ls -a $dir | sort`
+
+# declare array to hold sorted files and iterator
+declare -a sorted_files
+let num_files=0
+
+# change internal field separator to new line
+IFS=$'\n'
+
+# sort dot files first, as they have priority
+for file in $dot_files
+do
+    # if file is not readable throw error
+    if [ ! -r "$dir/$file" ]
+    then
+	echo "Error: cannot read $dir/$file"
+    # if readable, not symbolic, and is a file, add to sorted_files
+    elif [ ! -L "$dir/$file" ] && [ -f "$dir/$file" ];
+    then
+	echo "reading $dir/$file"
+	sorted_files[$num_files]="$dir/$file"
+	let num_files=num_files+1
+    fi
+done
+
+# do the same sorting with regular files
+for file in $reg_files
+do
+    # if file is not readable throw error                                       
+    if [ ! -r "$dir/$file" ]
+    then
+        echo "Error: cannot read $dir/$file"
+    # if readable, not symbolic, and is a file, add to sorted_files             
+    elif [ ! -L "$dir/$file" ] && [ -f "$dir/$file" ];
+    then
+	echo "reading $dir/$file"
+        sorted_files[$num_files]="$dir/$file"
+        let num_files=num_files+1
+    fi
+done
+
+# loop through sorted files
+for (( i=0; i<num_files; i++ ))
+do
+    # for each file, search if a higher ranked file is the same
+    for (( j=0; j<i; j++ ))
+    do
+	echo "[------"
+	echo "COMPARING ${sorted_files[$i]} and ${sorted_files[$j]}"
+	# silently compare the files
+	cmp -- "${sorted_files[$i]}" "${sorted_files[$j]}"
+	# if the files are duplicates (cmp returned 0)
+	if [ $? -eq 0 ]
+	then
+	    echo "found duplicates: $sorted_files[$i] and $sorted_files[$j]"
+	    # replace the duplicate with a hard link to higher ranked file
+	    ln -f -- "${sorted_files[$j]}" "${sorted_files[$i]}"
+	    echo "LINKING ${sorted_files[$i]} to ${sorted_files[$j]}"
+	    # stop before possibly reaching a duplicate that is a link
+	    break
+	else
+	    echo "did not find duplicates."
+	fi
+    	echo "------]"
+    done
+done

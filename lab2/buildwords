@@ -1,0 +1,34 @@
+#! /bin/sh
+
+# removes all but words within <td> tags
+sed -n '/<td>/,/<\/td>/p' $1 |    
+
+# remove all new lines
+tr -d '\n' |
+
+# replace </td> with new lines
+sed -r 's/<\/td>/\n/g' |
+
+# remove every other (English) words
+sed -n '2~2p' |
+
+# remove all  tags
+sed -r 's/<[^>]*>//g' |
+
+# replace commas and spaces with new lines
+sed -r 's/[, ]/\n/g' |
+
+# remove empty lines
+sed -r '/^\s*$/d' |
+
+# make uppercase letters lowercase
+tr '[:upper:]' '[:lower:]' |
+
+# replace ` with '
+sed s/\`/\'/g |
+
+# remove words that use English letters
+sed  "/[^p^k^'^m^n^w^l^h^a^e^i^o^u]/d" |
+
+# sort and remove duplicates
+sort -u
