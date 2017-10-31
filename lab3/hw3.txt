@@ -1,0 +1,56 @@
+Christopher Aziz
+304806012
+
+Homework: Rewriting a script
+----------------------------
+
+Q1.
+
+Looking at the patch, I can see that Brady removed the line
+'case_long_iso_time_style:' because it was duplicated. While this
+makes sense to delete it, it was not necessary for the patch
+because it did not affect the ultimate functionality.
+
+Q2.  
+
+The patch version of Coreutils could introduce many problems.
+For example, if a script relies on the older format of the date
+output of ls, then that script would have to be rewritten with the
+new format. Non English speakers would be more confused, as the
+months are now spelled out. In addition, the day comes after the
+month but before the year, which may be confusing to people from
+other cutlures. Lastly, the dates are harder to compare for
+humans and computers because of the dates ordering and non-numeric
+format.
+
+Q3.
+
+python randline.py /dev/null
+
+  File "/usr/lib64/python2.7/random.py", line 274, in choice
+    return seq[int(self.random() * len(seq))]
+    # raises IndexError if seq is empty
+IndexError: list index out of range
+
+The randline.py script indexes the elements in a file. From the
+trace, we can see that a comment indicates that if the array
+'seq' is empty we will get IndexError. This is exactly what
+occurs because we tried to read an empty file.
+
+Q3.
+
+python3 randline.py /dev/null
+
+  File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+
+Since we ran the script with Python 3 instead of Python 2, we
+get a SyntaxError instead of an IndexError. This is because
+instead of using a tuple, Python 3 changed the automatic tuple
+unpacking of IOError and merged the parameters in OSError.
+This could be fixed using the following:
+
+except OSError as err:
+       parser.error("OS error: {0}".format(err))

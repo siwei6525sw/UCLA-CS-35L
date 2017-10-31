@@ -1,0 +1,8 @@
+buffer-lcm.o: buffer-lcm.c /usr/include/stdc-predef.h buffer-lcm.h \
+ /usr/local/cs/gcc-7.2.0/lib/gcc/x86_64-pc-linux-gnu/7.2.0/include/stddef.h
+
+/usr/include/stdc-predef.h:
+
+buffer-lcm.h:
+
+/usr/local/cs/gcc-7.2.0/lib/gcc/x86_64-pc-linux-gnu/7.2.0/include/stddef.h:

@@ -1,0 +1,82 @@
+012345678901234567890123456789012345678901234567890123456789012345678901234567890
+Christopher Aziz
+304806012
+Assignment 3. Modifying and rewriting software
+
+Laboratory: Installing a small change to a big package
+------------------------------------------------------
+
+1. I started by grabbing and uncompressing it Coreutils 7.6
+
+wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-7.6.tar.gz
+tar -xzvf coreutils-7.6.tar.gz
+
+2. I then enter the coreutils directory and read the Installation Instructions
+
+cd coreutils-7.6/
+ls
+emacs INSTALL
+
+I now know to add the prefix option to ./configure to  change the install
+location from 'usr/local/bin' to my current directory.
+
+./configure --prefix=/u/cs/ugrad/aziz/35L/lab3
+
+Now we compile and move the files to the lab3 directory.
+
+make
+make install
+
+We then move to '/u/cs/ugrad/aziz/35L/lab3' and run the 'ls' command that is
+in this directory and compare it with the version in '/usr/local/cs/bin/ls'.
+
+ls -l /bin/bash
+-rwxr-xr-x 1 root root 960632 Aug  3 06:36 /bin/bash
+
+./ls -l /bin/bash
+-rwxr-xr-x 1 root root 960632 2017-08-03 06:36 /bin/bash
+
+As described in the assignment, we are getting YYYY-MM-DD instead of the
+traditional Unix date. In order to fix this bug, we will apply the patch.
+
+We apply the patch by copying the patch into the 'coreutils-7.6' directory.
+Then we need to get rid of the 'a/' and 'b/' directories from the beginning
+of the patch file with the '-p1' option before patching.
+
+cd coreutils-7.6
+emacs patch_file
+[paste patch]
+patch -p1 < patch_file
+
+[aziz@lnxsrv09 ~/35L/lab3/coreutils-7.6]$ make
+
+These commands compile and link ls and its dependencies.
+CC compiles the file and LD links the dependency
+
+  CC     ls.o
+  CCLD   dir
+  CCLD   vdir
+  CCLD   ls
+
+The GEN commands create documentation for the given file.
+These commands are not essentail whereas the commands above are.
+
+  GEN    dir.1
+  GEN    vdir.1
+  GEN    ls.1
+
+The commands not listed simply recursively searched each
+of the directories, usually finding nothing to be done for
+each.
+
+I now test the modifications to ls by using it on two text files.
+
+touch testfile.txt
+touch -t 201001010101.00 oldtestfile.txt
+ls -l
+./ls -l
+
+-rw-r--r--  1 aziz csugrad       0 Jan  1  2010 oldtestfile.txt
+-rw-r--r--  1 aziz csugrad       0 Oct 22 13:44 testfile.txt
+
+Horrah. The change to ls correctly fixed the bug.
