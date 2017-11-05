@@ -1,0 +1,158 @@
+Christopher Aziz
+304806012
+
+Laboratory: Debugging a C program
+---------------------------------
+
+I first redownloaded the coreutils, with a bug in its implementation.
+
+wget http://web.cs.ucla.edu/classes/fall17/
+cs35L/assign/coreutils-with-bug.tar.gz
+
+I then configured and compiled coreutils.
+
+cd coreutils-with-bug/
+./configure --prefix='/u/cs/ugrad/35L/lab4/coreutils-with-bug'
+make
+
+However, the compilation failed because of a previous declaration of a function
+called futimens as shown below:
+
+In file included from utimecmp.c:41:0:
+utimens.h:2:5: error: conflicting types for 'futimens'
+ int futimens (int, char const *, struct timespec const [2]);
+     ^~~~~~~~
+In file included from utimecmp.h:25:0,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens'\
+was here
+ extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+            ^~~~~~~~
+To fix this, we apply the patch.
+
+wget http://web.cs.ucla.edu/classes/fall17/cs35L/assign/coreutils.diff
+
+We then edit the patch file and remove the '~' from the path names in
+'patch_file'.
+
+emacs coreutils.diff
+
+Now we can properly apply the patch and compile.
+
+patch -p0 < coreutils.diff
+make
+
+Although the first bad bug is fixed, we can observe the second using the
+commands provided in the lab:
+
+tmp=$(mktemp -d)
+cd $tmp
+touch -d '1918-11-11 11:00 GMT' wwi-armistice
+touch now
+sleep 1
+touch now1
+TZ=UTC0 ls -lt --full-time wwi-armistice now now1
+
+-rw-r--r-- 1 aziz csugrad 0 2017-10-30 03:03:06.054406012 +0000 now1
+-rw-r--r-- 1 aziz csugrad 0 2017-10-30 03:02:58.222276125 +0000 now
+-rw-r--r-- 1 aziz csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+
+We can use gdb to debug this problem:
+
+gdb ~/src/ls
+info functions
+
+Flipping through all the functions, the 'compare_mtime' seems to be the most
+relevant to the bug that we are observing.
+
+break compare_mtime
+run -lt --full-time wwi-armistice now now1
+si
+list
+
+We can now see the source of the bug.
+
+45     	static inline int
+46     	timespec_cmp (struct timespec a, struct timespec b)
+47	{
+48	  int diff = a.tv_sec - b.tv_sec;
+49	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+50	}
+
+The function shown with 'list' reveals the possibility of an int overflow when
+'b.tv_sec' is subtracted from 'a.tv_sec'.
+
+We can see this in action through the following;
+
+info locals
+diff = 8
+
+This makes sense as the first comparison because 3:06 - 2:58 = 8.
+Running again, however, produces:
+
+info locals
+diff = -1171808710
+
+Clearly, there has been an int overflow when the time difference between files
+from the  the year 1918 and 2017. We can now quit gdb and rewrite the buggy
+code.
+
+cd ~/35L/lab4
+cp coreutils-with-bug/lib/timespec.h timespec.h
+emacs timespec.h
+
+We now change the 'timespec_cmp' function to no longer subtract 'a.tv_sec' and
+'b.tv_sec' in order to avoid int overflow:
+
+static inline int
+timespec_cmp (struct timespec a, struct timespec b)
+{
+  if(a.tv_sec < b.tv_sec) {
+    return -1;
+  }
+  else if(a.tv_sec > b.tv_sec) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+I use the the 'diff' command to produce the new patch file.
+
+diff -u coreutils-with-bug/lib/timespec.h timespec.h > coreutils-with-bug/lab4.diff
+
+Similar to as before, I change the paths in the patch file to both be
+'lib/timespec.h' so I can now test the patch:
+
+patch -p0 < lab4.diff
+make
+cd $tmp
+~/35L/lab4/coreutils-with-bug/src/ls -lt --full-time wwi-armistice now now1
+
+-rw-r--r-- 1 aziz csugrad 0 2017-10-29 20:03:06.054406012 -0700 now1
+-rw-r--r-- 1 aziz csugrad 0 2017-10-29 20:02:58.222276125 -0700 now
+-rw-r--r-- 1 aziz csugrad 0 1918-11-11 03:00:00.000000000 -0800 wwi-armistice
+
+The patch worked! The armistice file is correctly shown at the bottom of the
+list as the oldest file. We can now test this functionality on the SEASnet
+server.
+
+cd ~/35L/lab4
+touch -d '1918-11-11 11:00 GMT' wwi-armistice
+touch now
+sleep 1
+touch now1
+coreutils-with-bug/src/ls -lt --full-time wwi-armist 
+
+-rw-r--r-- 1 aziz csugrad 0 2054-12-17 09:28:16.000000000 -0800 wwi-armistice
+-rw-r--r-- 1 aziz csugrad 0 2017-10-29 21:39:02.350890000 -0700 now1
+-rw-r--r-- 1 aziz csugrad 0 2017-10-29 21:38:55.461249000 -0700 now
+
+We can see that on the SEASnet server the armistice file is shown as being the
+most recent file, from the future, even. This is because in the $tmp file
+system, the times are kept in 64 bit with the most significant bit being the
+sign bit. Since this bit is truncated along with the other first 32 bits,
+on the SEASnet system, the date flips from the past to the future. As a direct
+result, we see that instead of being from 1918, the 'ls' command shows that it
+is from 2054. Oops.
