@@ -1,0 +1,111 @@
+Christopher Aziz
+304806012
+
+Laboratory: Buffered versus unbuffered I/O
+------------------------------------------
+
+1.
+
+I first created the tr2b.c program which used the buffered getchar and putchar
+functions in order to transliterate bytes from stdin and print to stdout. The
+program checks for the correct number of arguments, equal lengthed 'from' and
+'to' arguments, and duplicates in the 'from' argument.
+
+2.
+
+I then created tr2u.c which has nearly the same functionality as
+tr2b.c. However, this program uses the direct syscalls read and write with a
+buffer of size 1 byte, making it effectively unbuffered.
+
+I then tested both programs 'tr2b.c' and 'tr2u.c; with commands such as the
+following:
+
+echo "hello there"  | ./tr2b 'eh'
+echo "hello there"  | ./tr2b 'ehp' 'al'
+echo "hello there"  | ./tr2b 'ee' 'alb'
+echo "hello there"  | ./tr2b 'eh' 'ab'
+
+The first three commands, for example, printed the appropriate error messages
+while the last command correctly printed 'ballo tbara' to stdout.
+
+3a.
+
+In order to test our programs, I start by creating a big text file of random
+bytes that is 5,000,000 bytes large.
+
+cat /dev/urandom | head -c 5000000 > big_file.txt
+
+I now use strace to compare the system calls of each program while copying one
+file to another:
+
+strace -o strace_tr2b_copy ./tr2b abc def < big_file.txt > out_tr2b_copy.txt
+strace -o strace_tr2u_copy ./tr2u abc def < big_file.txt > out_tr2u_copy.txt
+
+Using the 'wc' command I can see how many system calls are written in the strace
+output file.
+
+cat strace_tr2b_copy | wc -l
+cat strace_tr2u_copy | wc -l
+
+I found that the buffered tr2b command when copying one file to another took 31
+system calls.
+I found that the unbuffered tr2u command when copying one file to another took
+10000026 system calls.
+
+3b.
+
+I repeat the process and test the programs when copying a file to terminal.
+
+strace -o strace_tr2b_terminal ./tr2b abc def < big_file.txt
+strace -o strace_tr2u_terminal ./tr2u abc def < big_file.txt
+
+cat strace_tr2b_terminal | wc -l
+cat strace_tr2u_terminal | wc -l
+
+I found that the buffered tr2b command when copying a file to terminal took 32
+system calls.
+I found that the unbuffered tr2u command when copying a file to terminal took
+881755 system calls.
+
+From these tests we can see that copying files to the terminal take more system
+calls because some addition I/O is required to print to stdout. However,the
+unbuffered version of these programs requires about a million more system calls
+because it fails to quickly access and write memory in blocks like the buffered
+version.
+
+4.
+
+We now repeat the commands from (3) but use 'time' instead of 'strace' in order
+to measure how much faster the buffered version is.
+
+time ./tr2b abc def < big_file.txt > out_tr2b_copy_time.txt
+
+real	0m0.003s
+user	0m0.000s
+sys	0m0.001s
+
+time ./tr2u abc def < big_file.txt > out_tr2u_copy_time.txt
+
+real	0m5.763s
+user	0m0.269s
+sys	0m5.381s
+
+time ./tr2b abc def < big_file.txt
+
+real	0m0.002s
+user	0m0.000s
+sys	0m0.001s
+
+time ./tr2u abc def < big_file.txt
+
+real	0m5.520s
+user	0m0.274s
+sys	0m5.217s
+
+We can see that the buffered version is much faster than the unbuffered version
+when translating large files. This makes sense because of the extra overhead
+required when not using buffers. In addition, we expect that printing to
+stdout would require more time than printing to another file. Although this
+is not always observed, the time values are always very close indicating
+that this is not as signficant as a factor in producing a large change in
+CPU time required.

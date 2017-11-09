@@ -1,0 +1,80 @@
+Christopher Aziz
+304806012
+
+Homework: Encrypted sort revisited
+----------------------------------
+
+I first created 5 input files, the first having 100
+lines of characters, and each successive input file
+having 10 times the lines of the previous.
+
+I then tested each of the six commands in the form:
+
+time ./[command] < [input file] > output_file.txt
+
+The [command] is listed in the top right of the
+following time tables and the [input file] for
+each is described above. The time listed is in
+seconds. The letter 'f' indicate that the
+Command was run with the '-f' option enabled.
+
+For each command, we compare the number of lines in
+The input file to the three times measured.
+
+sfrob	| 10^2	| 10^3	| 10^4	| 10^5	| 10^6	|
+-------------------------------------------------
+real	| 0.022	| 0.072	| 0.129	| 1.997	|16.968 |
+user	| 0.003	| 0.014	| 0.107	| 0.936	|15.305	|
+sys	| 0.007	| 0.030	| 0.012	| 0.217	| 0.539	|
+
+sfrobu	| 10^2	| 10^3	| 10^4	| 10^5	| 10^6	|
+-------------------------------------------------
+real	| 0.010	| 0.022	| 0.130	| 6.244	|34.182	|
+user	| 0.002	| 0.004	| 0.021	| 0.176	| 3.751	|
+sys	| 0.004	| 0.015	| 0.105	| 5.053	|20.398	|
+
+sfrobs	| 10^2	| 10^3	| 10^4	| 10^5	| 10^6	|
+-------------------------------------------------
+real	| 0.018	| 0.030	| 0.151	| 1.281	|13.057	|
+user	| 0.010	| 0.026	| 0.148	| 1.310	|13.477	|
+sys	| 0.007	| 0.010	| 0.012	| 0.062	| 0.466	|
+
+sfrobu f| 10^2	| 10^3	| 10^4	| 10^5	| 10^6	|
+-------------------------------------------------
+real	| 0.009	| 0.027	| 0.158	| 6.452	|33.556	|
+user	| 0.003	| 0.007	| 0.143	| 0.932	| 4.209	|
+sys	| 0.004	| 0.017	| 0.110	| 3.104	|20.293	|
+
+sfrobs f| 10^2	| 10^3	| 10^4	| 10^5	| 10^6	|
+-------------------------------------------------
+real	| 0.015	| 0.029	| 0.156	| 4.323	|13.520	|
+user	| 0.011	| 0.024	| 0.152	| 2.355	|14.165	|
+sys	| 0.008	| 0.009	| 0.013	| 0.654	| 0.369	|
+
+We can add the user and sys time to get the total
+CPU time for each command in seconds. Looking at
+this time, we see that the sfrobs is the fastest
+because it is a heavily optimized by very smart
+people. Since spaces frobnicate into new lines, we
+can simply and effectively use the sort function.
+
+We next see that the buffered sfrob is the next fastest.
+This makes sense because sfrob uses the std library
+to access system calls which are buffered and optimized.
+
+The slowest was sfrobs which although it can quickly
+read from regular files since it does not have to
+reallocate memory, it ineffectively directly uses
+system calls often one byte at a time, slowing it down.
+
+By printing comparisons, we can estimate the number of
+comparisons as a function of lines/spaces for sfrobu:
+
+sfrobu	| 10^2	| 10^3	| 10^4	| 10^5	| 10^6	|
+-------------------------------------------------
+compar.	| 1k	| 40k	| 200k	| 1.5M	| 2M	|
+
+We can see that this follows a logarithmic regression.
+We can represent this relationship as O(nlogn) or
+C = S*logS where C is the number of comparisons and N
+is the size of the lines/spaces input.
