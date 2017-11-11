@@ -1,0 +1,58 @@
+Christopher Aziz
+304806012
+
+Multithreaded performance
+-------------------------
+
+I first ran 'sort --version' to ensure that I was using a new enough version. I
+correctly had version 8.2.
+
+I next used the following command to generate a text file with 10 million random
+single-precision floating point numbers per line.
+
+cat /dev/urandom | od -f -An | tr -s ' ' '\n' | head -n 10000000 > spfp.txt
+
+I ran the sort command on this large input file with:
+
+time -p sort -g < spfp.txt > /dev/null
+
+real 21.21
+user 114.59
+sys 0.45
+
+The user time is much more than the real time so I suspect that the sort command
+is already being ran in parallel.
+Next I learned how to use the parallel option for the sort command by using
+'sort --help'.
+
+time -p sort -g --parallel=1 < spfp.txt > /dev/null
+
+real 122.55
+user 121.51
+sys 0.28
+
+time -p sort -g --parallel=2 < spfp.txt > /dev/null
+
+real 59.40
+user 113.46
+sys 0.29
+
+time -p sort -g --parallel=4 < spfp.txt > /dev/null
+
+real 33.85
+user 114.11
+sys 0.47
+
+time -p sort -g --parallel=8 < spfp.txt > /dev/null
+
+real 21.58
+user 115.65
+sys 0.48
+
+These results make sense because as we increase the number of parallel threads
+that are sorting the file, the total CPU time stays relatively constant but the
+real time decreases steadily. The real time when using 8 parallel threads is
+nearly equal to when we did not use the parallel option at all indicating that
+the normal sort command likely used the same number of threads. Ultimately this
+laboratory shows how multithreading can be used to effectively decrease the
+total wall time involved in a program's operation.
