@@ -1,0 +1,41 @@
+Christopher Aziz
+304806012
+
+SSH setup and use in applications
+Homework Questions
+------------------
+
+1.
+
+The resulting network is secured by having all of the data sent
+to the server is encrypted with the client's private key and the
+server's public key so that it can be decrypted on the server
+with the client's public key and the server's private key.
+
+(1) If another team had been observing all the bytes across the
+network, the network would still be secure because I used a
+password to originally authenticate myself as the client and send
+my public key that is associated with my private key. Since another
+team would not know my private key, and my private key is never sent
+across the network, they would not be able to correctly SSH to the
+server using my private key.
+
+(2) If the other team had temporary physical control of the USB, they
+would gain access to my private and public keys which could be used
+to SSH to the server. However, if I were to create a password for my
+private key, this vulnerability would be avoided.
+
+2.
+
+The 'gpg --verify' command attempts to verify that the sent data was not
+altered. The data is previously hashed and the hash is encrypted using
+the signer's private key. Then, during the verification, the hash is
+decrypted using the signer’s public key and the data is rehashed and
+this new hash is compared to the sent hash to guarantee that the sent
+data was not altered. However, this verification process is vulnerable
+to a man in the middle that sends their own public key and data that is
+hashed using the man in the middle’s private key. Then the modified data
+will pass the verification. To avoid this problem, we can use a
+certification authority to make sure we are using the correct public key
+of the sender when we decrypt the hash that was sent. This guarantees
+that the data was signed by the intended sender.

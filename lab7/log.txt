@@ -1,0 +1,54 @@
+Christopher Aziz
+304806012
+
+SSH setup and use in applications laboratory
+--------------------------------------------
+
+My partner for this lab is Sheldon Dong.
+
+To setup, I followed the instructions on Piazza. This included downloading
+drivers onto my local computer, enabling wifi on the BeagleBone. I SSH into
+my BeagleBone and updated apt-get and used it to install xauth and firefox.
+Again, these instructions are all explained in detail on the class Piazza.
+
+We start by setting up my BeagleBone so that my partner can SSH to me.
+To generate a public and private key I use the following command with the
+default settings.
+
+ssh-keygen
+
+I then create a user and password for Sheldon.
+
+sudo useradd -d /home/sheldon -m sheldon
+sudo passwd sheldon
+
+Next I create the .ssh folder in Sheldon's home directory and give him
+ownership.
+
+cd /home/sheldon
+sudo mkdir .ssh
+sudo chown -R sheldon .ssh
+sudo chmod 700 .ssh
+
+Sheldon can now SSH onto my BeagleBone for his client part of the lab.
+After Sheldon has set up a user that I can use, I SSH onto his BeagleBone
+using the following techniques.
+
+To determine our ip addresses, we looked under the 'inet addr' part of the
+'wlan0' section after running 'ifconfig'.
+
+I first copy my public key to my partner and enter my password:
+
+ssh-copy-id –i chris@149.142.34.173
+
+Then I explicitly add my private key to the authetication agent.
+
+ssh-add
+
+I can now SSH to my partner's server.
+
+ssh -X chris@149.142.34.173
+firefox
+
+I was able to successfully open firefox and other programs on the remote
+host.
