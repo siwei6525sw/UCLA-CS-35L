@@ -1,0 +1,339 @@
+Christopher Aziz
+304806012
+
+Laboratory: Who's linked to what?
+---------------------------------
+
+1.
+
+I wrote, compiled, and ran the following program called trivial.c:
+
+#include <stdio.h>
+#include <math.h>
+
+int main(void)
+{
+  printf("%.17g", cos(sqrt(3.0)));
+  return 0;
+}
+
+gcc trivial.c -o trivial
+
+2.
+
+I then used 'ldd' to check the linked libraries:
+
+ldd trivial
+	linux-vdso.so.1 =>  (0x00007ffe4d1ee000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f2253f30000)
+	/lib64/ld-linux-x86-64.so.2 (0x00005574acfcf000)
+
+3.
+
+Now I see which system calls my trivial program makes:
+
+strace -o trivial_strace ./trival
+
+EXECVE("./TRIVIAL", ["./TRIVIAL"], [/* 35 VARS */]) = 0
+BRK(NULL)                               = 0X217C000
+MMAP(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0X7F36A5970000
+ACCESS("/ETC/LD.SO.PRELOAD", R_OK)      = -1 ENOENT (NO SUCH FILE OR DIRECTORY)
+OPEN("/ETC/LD.SO.CACHE", O_RDONLY|O_CLOEXEC) = 3
+FSTAT(3, {ST_MODE=S_IFREG|0644, ST_SIZE=161768, ...}) = 0
+MMAP(NULL, 161768, PROT_READ, MAP_PRIVATE, 3, 0) = 0X7F36A5948000
+CLOSE(3)                                = 0
+OPEN("/LIB64/LIBC.SO.6", O_RDONLY|O_CLOEXEC) = 3
+READ(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\35\2\0\0\0\0\0"...,
+832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2127336, ...}) = 0
+mmap(NULL, 3940800, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) =
+0x7f36a538d000
+mprotect(0x7f36a5545000, 2097152, PROT_NONE) = 0
+mmap(0x7f36a5745000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|
+MAP_DENYWRITE, 3, 0x1b8000) = 0x7f36a5745000
+mmap(0x7f36a574b000, 16832, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|
+MAP_ANONYMOUS, -1, 0) = 0x7f36a574b000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0x7f36a5947000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0x7f36a5945000
+arch_prctl(ARCH_SET_FS, 0x7f36a5945740) = 0
+mprotect(0x7f36a5745000, 16384, PROT_READ) = 0
+mprotect(0x600000, 4096, PROT_READ)     = 0
+mprotect(0x7f36a5971000, 4096, PROT_READ) = 0
+munmap(0x7f36a5948000, 161768)          = 0
+fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(136, 13), ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+0x7f36a596f000
+write(1, "-0.16055653857469052", 20)    = 20
+exit_group(0)                           = ?
++++ exited with 0 +++
+
+I can see from the output that the following system calls from above are
+related to dynamic linking.
+
+At the start, the dynamic linker is called:
+
+ACCESS("/ETC/LD.SO.PRELOAD", R_OK)      = -1 ENOENT (NO SUCH FILE OR DIRECTORY)
+OPEN("/ETC/LD.SO.CACHE", O_RDONLY|O_CLOEXEC) = 3
+FSTAT(3, {ST_MODE=S_IFREG|0644, ST_SIZE=161768, ...}) = 0
+MMAP(NULL, 161768, PROT_READ, MAP_PRIVATE, 3, 0) = 0X7F36A5948000
+CLOSE(3)                                = 0
+
+Then the linker loads '/LIB64/LIBC.SO.6':
+
+OPEN("/LIB64/LIBC.SO.6", O_RDONLY|O_CLOEXEC) = 3
+READ(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\35\2\0\0\0\0\0"...,
+832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2127336, ...}) = 0
+mmap(NULL, 3940800, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) =
+0x7f36a538d000
+mprotect(0x7f36a5545000, 2097152, PROT_NONE) = 0
+mmap(0x7f36a5745000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|
+MAP_DENYWRITE, 3, 0x1b8000) = 0x7f36a5745000
+mmap(0x7f36a574b000, 16832, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|
+MAP_ANONYMOUS, -1, 0) = 0x7f36a574b000
+close(3)
+
+
+The system call 'fstat' is likely used to determine the size of the library,
+'mmap' is used to allocate memory for it, and 'read' is used to read
+information about it. Other system calls such as 'write' are enabled since
+the libraries have been opened.
+
+4.
+
+As described, I used the command:
+
+ls /usr/bin | awk 'NR%101==304806012%101'
+
+This gave me the following list of commands to investigate:
+
+abs2rel
+basename
+chage
+cube
+desktop-file-validate
+escputil
+gc
+gnatkr
+gst-xmlinspect
+httexi
+isosize
+kfontview
+ld.gold
+lssubsys
+mount
+nl-link-release
+osinfo-query
+pamwipeout
+pdfseparate
+pktogf
+pnmtops
+ppmtoeyuv
+qhelpconverter
+rpmdev-diff
+setsid
+stapdyn
+teamdctl
+update-mime-database
+xdg-screensaver
+ypchsh
+
+5.
+
+I then envoked the 'ldd' command on each using:
+
+ls /usr/bin | awk 'NR%101==304806012%101' | xargs ldd
+
+The following commands were not a dynamic executable as they clearly printed
+'not a dynamic executable':
+
+abs2rel
+httexi
+rpmdev-diff
+xdg-screensaver
+
+I could not read these two because I did not have read permissions, as they
+printed 'error: you do not have read permission for [file]':
+
+chage
+ypchsh
+
+The rest of the files, listed below, are dynamic libraries and the 'ldd'
+command printed thier shared library dependencies.
+
+cube
+desktop-file-validate
+escputil
+gc
+gnatkr
+gst-xmlinspect
+isosize
+kfontview
+ld.gold
+lssubsys
+mount
+nl-link-release
+osinfo-query
+pamwipeout
+pdfseparate
+pktogf
+pnmtops
+ppmtoeyuv
+qhelpconverter
+setsid
+stapdyn
+teamdctl
+update-mime-database
+
+
+The outputs are too long to list here, but for example, 'ldd gc' printed
+the following:
+
+	linux-vdso.so.1 =>  (0x00007fff4b5f2000)
+	libcgraph.so.6 => /lib64/libcgraph.so.6 (0x00007fc52c499000)
+	libcdt.so.5 => /lib64/libcdt.so.5 (0x00007fc52c292000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007fc52bece000)
+	/lib64/ld-linux-x86-64.so.2 (0x00005625c8435000)
+
+6.
+
+I use the following command to sort each of the libraries:
+
+ls /usr/bin | awk 'NR%101==304806012%101' | xargs ldd | grep "\.so" |
+sed 's/([^()]*)$//g' | sed 's/=>//g' | sort -u
+
+This command runs 'ldd' on each command, filters out lines containing the
+name of shared libraries, removes specific addresses, and then lastly sorts
+each library and removes the duplicates.
+
+This outputs the following sorted list of unique dynamic libraries:
+
+	/lib64/ld-linux-x86-64.so.2 
+	libacl.so.1  /lib64/libacl.so.1 
+	libattica.so.0.4  /lib64/libattica.so.0.4 
+	libattr.so.1  /lib64/libattr.so.1 
+	libblkid.so.1  /lib64/libblkid.so.1 
+	libboost_date_time-mt.so.1.53.0
+		/lib64/libboost_date_time-mt.so.1.53.0 
+	libboost_system-mt.so.1.53.0  /lib64/libboost_system-mt.so.1.53.0 
+	libboost_thread-mt.so.1.53.0  /lib64/libboost_thread-mt.so.1.53.0 
+	libbz2.so.1  /lib64/libbz2.so.1 
+	libcap.so.2  /lib64/libcap.so.2 
+	libcdt.so.5  /lib64/libcdt.so.5 
+	libcgraph.so.6  /lib64/libcgraph.so.6 
+	libcgroup.so.1  /lib64/libcgroup.so.1 
+	libcom_err.so.2  /lib64/libcom_err.so.2 
+	libcommon.so.9.3  /usr/lib64/dyninst/libcommon.so.9.3 
+	libcrypto.so.10  /lib64/libcrypto.so.10 
+	libc.so.6  /lib64/libc.so.6 
+	libcube4gui.so.7  /lib64/libcube4gui.so.7 
+	libcube4.so.7  /lib64/libcube4.so.7 
+	libdbus-1.so.3  /lib64/libdbus-1.so.3 
+	libdbusmenu-qt.so.2  /lib64/libdbusmenu-qt.so.2 
+	libdl.so.2  /lib64/libdl.so.2 
+	libdwarf.so.0  /lib64/libdwarf.so.0 
+	libdw.so.1  /lib64/libdw.so.1 
+	libdynDwarf.so.9.3  /usr/lib64/dyninst/libdynDwarf.so.9.3 
+	libdynElf.so.9.3  /usr/lib64/dyninst/libdynElf.so.9.3 
+	libdyninstAPI.so.9.3  /usr/lib64/dyninst/libdyninstAPI.so.9.3 
+	libelf.so.1  /lib64/libelf.so.1 
+	libexpat.so.1  /lib64/libexpat.so.1 
+	libfam.so.0  /lib64/libfam.so.0 
+	libffi.so.6  /lib64/libffi.so.6 
+	libfontconfig.so.1  /lib64/libfontconfig.so.1 
+	libfreetype.so.6  /lib64/libfreetype.so.6 
+	libgcc_s.so.1  /lib64/libgcc_s.so.1 
+	libgio-2.0.so.0  /lib64/libgio-2.0.so.0 
+	libglib-2.0.so.0  /lib64/libglib-2.0.so.0 
+	libgmodule-2.0.so.0  /lib64/libgmodule-2.0.so.0 
+	libgobject-2.0.so.0  /lib64/libgobject-2.0.so.0 
+	libgssapi_krb5.so.2  /lib64/libgssapi_krb5.so.2 
+	libgthread-2.0.so.0  /lib64/libgthread-2.0.so.0 
+	libgutenprint.so.2  /lib64/libgutenprint.so.2 
+	libICE.so.6  /lib64/libICE.so.6 
+	libinstructionAPI.so.9.3  /usr/lib64/dyninst/libinstructionAPI.so.9.3 
+	libjansson.so.4  /lib64/libjansson.so.4 
+	libjbig.so.2.0  /lib64/libjbig.so.2.0 
+	libjpeg.so.62  /lib64/libjpeg.so.62 
+	libk5crypto.so.3  /lib64/libk5crypto.so.3 
+	libkdecore.so.5  /lib64/libkdecore.so.5 
+	libkdeui.so.5  /lib64/libkdeui.so.5 
+	libkeyutils.so.1  /lib64/libkeyutils.so.1 
+	libkfontinst.so.4  /lib64/libkfontinst.so.4 
+	libkfontinstui.so.4  /lib64/libkfontinstui.so.4 
+	libkio.so.5  /lib64/libkio.so.5 
+	libkparts.so.4  /lib64/libkparts.so.4 
+	libkpathsea.so.6  /lib64/libkpathsea.so.6 
+	libkrb5.so.3  /lib64/libkrb5.so.3 
+	libkrb5support.so.0  /lib64/libkrb5support.so.0 
+	liblcms2.so.2  /lib64/liblcms2.so.2 
+	liblzma.so.5  /lib64/liblzma.so.5 
+	libmount.so.1  /lib64/libmount.so.1 
+	libm.so.6  /lib64/libm.so.6 
+	libnepomukquery.so.4  /lib64/libnepomukquery.so.4 
+	libnepomuk.so.4  /lib64/libnepomuk.so.4 
+	libnepomukutils.so.4  /lib64/libnepomukutils.so.4 
+	libnetpbm.so.11  /lib64/libnetpbm.so.11 
+	libnl-3.so.200  /lib64/libnl-3.so.200 
+	libnl-cli-3.so.200  /lib64/libnl-cli-3.so.200 
+	libnl-genl-3.so.200  /lib64/libnl-genl-3.so.200 
+	libnl-idiag-3.so.200  /lib64/libnl-idiag-3.so.200 
+	libnl-nf-3.so.200  /lib64/libnl-nf-3.so.200 
+	libnl-route-3.so.200  /lib64/libnl-route-3.so.200 
+	libopenjpeg.so.1  /lib64/libopenjpeg.so.1 
+	libosinfo-1.0.so.0  /lib64/libosinfo-1.0.so.0 
+	libparseAPI.so.9.3  /usr/lib64/dyninst/libparseAPI.so.9.3 
+	libpatchAPI.so.9.3  /usr/lib64/dyninst/libpatchAPI.so.9.3 
+	libpcontrol.so.9.3  /usr/lib64/dyninst/libpcontrol.so.9.3 
+	libpcre.so.1  /lib64/libpcre.so.1 
+	libpng15.so.15  /lib64/libpng15.so.15 
+	libpoppler.so.46  /lib64/libpoppler.so.46 
+	libpthread.so.0  /lib64/libpthread.so.0 
+	libqca.so.2  /lib64/libqca.so.2 
+	libQtCLucene.so.4  /lib64/libQtCLucene.so.4 
+	libQtCore.so.4  /lib64/libQtCore.so.4 
+	libQtDBus.so.4  /lib64/libQtDBus.so.4 
+	libQtGui.so.4  /lib64/libQtGui.so.4 
+	libQtHelp.so.4  /lib64/libQtHelp.so.4 
+	libQtNetwork.so.4  /lib64/libQtNetwork.so.4 
+	libQtSql.so.4  /lib64/libQtSql.so.4 
+	libQtSvg.so.4  /lib64/libQtSvg.so.4 
+	libQtXml.so.4  /lib64/libQtXml.so.4 
+	libresolv.so.2  /lib64/libresolv.so.2 
+	librt.so.1  /lib64/librt.so.1 
+	libselinux.so.1  /lib64/libselinux.so.1 
+	libSM.so.6  /lib64/libSM.so.6 
+	libsolid.so.4  /lib64/libsolid.so.4 
+	libsopranoclient.so.1  /lib64/libsopranoclient.so.1 
+	libsoprano.so.4  /lib64/libsoprano.so.4 
+	libssl.so.10  /lib64/libssl.so.10 
+	libstackwalk.so.9.3  /usr/lib64/dyninst/libstackwalk.so.9.3 
+	libstdc++.so.6  /lib64/libstdc++.so.6 
+	libstreamanalyzer.so.0  /lib64/libstreamanalyzer.so.0 
+	libstreams.so.0  /lib64/libstreams.so.0 
+	libsymtabAPI.so.9.3  /usr/lib64/dyninst/libsymtabAPI.so.9.3 
+	libteamdctl.so.0  /lib64/libteamdctl.so.0 
+	libtiff.so.5  /lib64/libtiff.so.5 
+	libudev.so.1  /lib64/libudev.so.1 
+	libuuid.so.1  /lib64/libuuid.so.1 
+	libX11.so.6  /lib64/libX11.so.6 
+	libXau.so.6  /lib64/libXau.so.6 
+	libxcb.so.1  /lib64/libxcb.so.1 
+	libXcursor.so.1  /lib64/libXcursor.so.1 
+	libXext.so.6  /lib64/libXext.so.6 
+	libXfixes.so.3  /lib64/libXfixes.so.3 
+	libXft.so.2  /lib64/libXft.so.2 
+	libXinerama.so.1  /lib64/libXinerama.so.1 
+	libXi.so.6  /lib64/libXi.so.6 
+	libxml2.so.2  /lib64/libxml2.so.2 
+	libXpm.so.4  /lib64/libXpm.so.4 
+	libXrandr.so.2  /lib64/libXrandr.so.2 
+	libXrender.so.1  /lib64/libXrender.so.1 
+	libxslt.so.1  /lib64/libxslt.so.1 
+	libXtst.so.6  /lib64/libXtst.so.6 
+	libz.so.1  /lib64/libz.so.1 
+	linux-vdso.so.1
