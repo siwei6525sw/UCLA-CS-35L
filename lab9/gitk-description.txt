@@ -1,0 +1,17 @@
+Christopher Aziz
+304806012
+
+Description of gitk
+-------------------
+
+On the top, there is a window with three columns. The first column contains
+a history of all the commits in a branching tree structure. The commits are
+labeled with the beginning of their change log. The second column contains
+the author and email of the selected commit, and the third column contains the
+date. The middle contains the SHA1 ID of the commit and a search field.
+The bottom left window contains the diff of the commit for the modified files.
+Instead of a diff, the old or new versions can also be selected.
+The bottom right window contains a way to view the names of and select the
+modifed files, in either a patch or tree format.
+
+

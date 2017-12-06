@@ -1,0 +1,108 @@
+Christopher Aziz
+304806012
+
+Homework: Verifying and publishing a backported change
+------------------------------------------------------
+
+1.
+
+(This file)
+
+2.
+
+I was able to check out version 3.0 of Diffutils from my repository into a new
+branch named 'quote' using:
+
+git checkout v3.0 -b quote
+
+3.
+
+Using my patch, I patched this new branch:
+
+patch -p1 < quote-3.0-patch.txt 
+
+patching file src/cmp.c
+patching file src/diff.c
+patching file src/diff3.c
+patching file src/dir.c
+patching file src/sdiff.c
+patching file src/util.c
+
+4.
+
+I learned how to use the Emacs function add-change-log-entry-other-window
+(C-x 4 a).
+
+5.
+
+I went through each modified file and used (C-x 4 a) to update the ChangeLog
+with the appropriate message for each of the six files. For example:
+
+* cmp.c: Replace grave accents from character string constants with single
+quotes
+
+
+6.
+
+I then committed the patch to the new branch with the ChangeLog entry as the
+commit message using:
+
+git commit -Fa src/ChangeLog
+
+7.
+
+I used the following to create a formatted patch:
+
+git format-patch -1 --stdout > formatted-patch.txt
+
+8.
+
+My partner for this lab is Ken Gu.  He sent me his patch which I renamed
+'formatted-patch-ken.txt'.
+
+I first switched to a new branch called 'partner':
+
+git checkout v3.0 -b partner
+
+Then I applied my partner's patch:
+
+git am ../formatted-patch-ken.txt
+
+Applying: 2017-12-02 Qi Kun Gu <qig@lnxsrv07.seas.ucla.edu>
+
+I then repeated the compilation process as described before:
+
+./bootstrap
+./configure
+make
+make check
+
+I confirmed that the patch worked.
+
+9.
+
+I used 'make distdir' and then opened the ChangeLog file and observed my
+partner's change as the most recent entry in the log. I can also verify that
+grave accents were replaced by quotes in outputs.
+
+10.
+
+Lastly, I create a new directory for the GNU Emacs git repository's master
+branch. Since I found that '~eggert/src/gnu/emacs' did not exist, I instead
+cloned it from 'gnu.org'.
+
+mkdir emacs-master
+git clone git://git.savannah.gnu.org/emacs.git emacs-master
+
+I then downloaded XQuartz, relogged in and ssh to the lnxsrv09 with the '-Y'
+option. I then used:
+
+cd emacs-master
+gitk
+
+This launched XQuartz with the gitk UI.
+I found that the newest merge that is not newer than 2015-01-25 is by Paul
+Eggert and changes the test/indent/shell.sh file to use '-eq' instead of
+'=='. The SHA1 ID for this commit is:
+
+407e6beeb3c37947c7c92bf0d230973bf133afde
